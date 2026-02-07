@@ -1,0 +1,189 @@
+:root{
+  --bg: #f6eedb;
+  --green:#4aa95b;
+  --green2:#78d37f;
+  --soil1:#6a4326;
+  --soil2:#3a2416;
+}
+
+*{ box-sizing:border-box; }
+html,body,#root{ height:100%; margin:0; }
+
+body{
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  background: var(--bg);
+}
+
+.page{
+  min-height:100%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding: 24px;
+}
+
+/* phone card */
+.phone{
+  width: min(420px, 95vw);
+  height: min(760px, 92vh);
+  padding: 16px;
+  border-radius: 22px;
+  background: #f7edd6;
+  box-shadow: 0 18px 38px rgba(0,0,0,.14);
+}
+
+.scene{
+  position:relative;
+  width:100%;
+  height:100%;
+  border-radius: 18px;
+  overflow:hidden;
+  background: linear-gradient(180deg, #fbf3df 0%, #f0d6a6 62%, #e8c889 100%);
+}
+
+/* =========================
+   DIRT FALLING (BEHIND ALL)
+   ========================= */
+.dirtSpawn{
+  position:absolute;
+  inset: 0;
+  z-index: 0;            /* behind all */
+  pointer-events:none;
+}
+
+.dirt{
+  position:absolute;
+  top:-18px;
+  border-radius:999px;
+  background: radial-gradient(circle at 30% 30%, #7a4b2a, #3a2416);
+  opacity:.9;
+  animation-name: dirtFall;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+@keyframes dirtFall{
+  0%   { transform: translateX(0) translateY(-18px) scale(1); opacity: 0; }
+  10%  { opacity:.9; }
+  100% { transform: translateX(var(--drift)) translateY(900px) scale(.9); opacity: 0; }
+}
+
+/* =========================
+   LOGO / MASCOT
+   ========================= */
+.logoImg{
+  position:absolute;
+  top: 40px;
+  left: 50%;
+  width: 280px;
+  transform: translateX(-50%);
+  z-index: 4;
+  animation: bob 2.8s ease-in-out infinite;
+  filter: drop-shadow(0 12px 12px rgba(0,0,0,.10));
+  pointer-events:none;
+}
+
+/* =========================
+   LOGIN (ABOVE RECYCLE)
+   ========================= */
+.loginBtn{
+  position:absolute;
+  top: 60%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 235px;
+  height: 60px;
+  border:none;
+  border-radius:999px;
+  font-weight:900;
+  font-size:20px;
+  letter-spacing:.6px;
+  color:#0a3f1e;
+  background: radial-gradient(circle at 30% 30%, var(--green2), var(--green));
+  opacity: 1;
+  box-shadow: 0 14px 24px rgba(0,0,0,.16);
+  cursor:pointer;
+  z-index: 5;
+  overflow:hidden;
+  transition: transform .12s ease, filter .12s ease;
+}
+
+
+
+@keyframes bob{
+  0%   { transform: translateX(-50%) translateY(0); }
+  45%  { transform: translateX(-50%) translateY(8px); }
+  100% { transform: translateX(-50%) translateY(0); }
+}
+
+/* =========================
+   RECYCLE (VISIBLE + SPIN)
+   ========================= */
+.recycleImg{
+  position:absolute;
+  top: 60%;
+  left: 50%;
+  width: 240px;
+  transform: translate(-50%, -50%);
+  z-index: 2;
+  animation: spin 3.6s linear infinite;
+  filter: drop-shadow(0 12px 12px rgba(0,0,0,.10));
+  pointer-events:none;
+} 
+@keyframes spin{
+  to{ transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+
+.loginBtn:hover{
+  filter: brightness(1.03);
+  transform: translate(-50%, -50%) scale(1.02);
+  opacity: .5;
+}
+.loginBtn:active{
+  transform: translate(-50%, -50%) scale(.98);
+}
+
+.ripple{
+  position:absolute;
+  border-radius:999px;
+  background: rgba(255,255,255,.45);
+  transform: scale(0);
+  animation: ripple .55s ease-out forwards;
+  pointer-events:none;
+}
+@keyframes ripple{
+  to{ transform: scale(2.2); opacity:0; }
+}
+
+/* =========================
+   BOTTOM DIRT (1/12 SCREEN)
+   ========================= */
+.dirtBottomImg{
+  position:absolute;
+  left: 0%;
+  right: 40%;
+  bottom: -45px;     /* lower */
+  height: 32%;        /* BIGGER */
+  min-height: 90px;  
+  max-height: none;
+  z-index: 1;
+  filter: drop-shadow(0 -10px 14px rgba(0,0,0,.06));
+  opacity: 1;
+}
+.dirtBottomImg2{
+  position:absolute;
+  left: 50%;
+  right: 40%;
+  bottom: -42px;
+  height: 32%;
+  min-height: 90px;
+  max-height: none;
+  z-index: 1;
+  filter: drop-shadow(0 -10px 14px rgba(0,0,0,.06));
+  opacity: 1;
+
+  transform: scaleX(-1);
+  clip-path: inset(0 2% 0 6%); /* 👈 crop sides */
+}
+

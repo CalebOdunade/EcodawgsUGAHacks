@@ -1,0 +1,126 @@
+/* =========================
+   AUTH PAGE ONLY
+   ========================= */
+
+.recycleBg{
+  position:absolute;
+  left: 50%;
+  top: 46%;
+  width: 500px;
+  transform: translate(-50%, -50%);
+  z-index: 1;
+  opacity: .40;
+  pointer-events:none;
+  animation: spin 5.2s linear infinite;
+  filter: drop-shadow(0 10px 10px rgba(0,0,0,.10));
+}
+
+@keyframes spin{
+  to{ transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+/* auth card */
+.authCard{
+  position:absolute;
+  left: 50%;
+  top: 46%;
+  transform: translate(-50%, -50%);
+  width: min(320px, 86%);
+  padding: 18px 16px 14px;
+  background: #b8a07b;
+  z-index: 3;
+  box-shadow: 0 14px 22px rgba(0,0,0,.20);
+  border: 1px solid rgba(0,0,0,.15);
+}
+
+.authLogo{
+  display:block;
+  width: 150px;
+  margin: 0 auto 10px;
+  filter: drop-shadow(0 10px 10px rgba(0,0,0,.10));
+  pointer-events:none;
+}
+
+/* input fields */
+.fields{
+  display:flex;
+  flex-direction:column;
+  gap: 10px;
+}
+
+.field{
+  display:grid;
+  grid-template-columns: 38px 1fr;
+  align-items:center;
+  height: 36px;
+  background: linear-gradient(180deg, #4a3518 0%, #3c2a12 100%);
+}
+
+.fieldIcon{
+  height: 100%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background: #fff;
+  font-size: 16px;
+}
+
+.fieldInput{
+  height: 100%;
+  width: 100%;
+  border:none;
+  outline:none;
+  padding: 0 10px;
+  color:#fff;
+  background: transparent;
+  font-weight:700;
+  font-size:12px;
+}
+
+.fieldInput::placeholder{
+  color: rgba(255,255,255,.9);
+}
+
+/* buttons */
+.authBtn{
+  margin: 14px auto 6px;
+  display:block;
+  width: 110px;
+  height: 34px;
+  border:none;
+  cursor:pointer;
+  background: linear-gradient(180deg, #5a421e, #3c2a12);
+  color:#fff;
+  font-weight:800;
+  font-size:12px;
+  box-shadow: 0 10px 14px rgba(0,0,0,.18);
+  position:relative;
+  overflow:hidden;
+}
+
+.switchMode{
+  margin: 6px auto 0;
+  display:block;
+  background:none;
+  border:none;
+  font-size:12px;
+  text-decoration:underline;
+  cursor:pointer;
+  color: rgba(0,0,0,.7);
+}
+
+.dirtBottomImg2{
+  position:absolute;
+  left: 50%;
+  right: 40%;
+  bottom: -42px;
+  height: 32%;
+  min-height: 90px;
+  max-height: none;
+  z-index: 1;
+  filter: drop-shadow(0 -10px 14px rgba(0,0,0,.06));
+  opacity: 1;
+
+  transform: scaleX(-1);
+  clip-path: inset(0 2% 0 6%); /* 👈 crop sides */
+}
