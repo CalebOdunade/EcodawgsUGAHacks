@@ -132,9 +132,7 @@ export default function CompassPage() {
   const API_BASE =
     process.env.REACT_APP_API_BASE || "http://localhost:8080";
 
-  console.log("REACT_APP_API_BASE =", process.env.REACT_APP_API_BASE);
-  console.log("API_BASE =", API_BASE);
-  console.log("API_BASE =", API_BASE);
+
 
 
   async function fetchAllBins() {
@@ -208,37 +206,31 @@ export default function CompassPage() {
       clearInterval(t);
     };
   }, []);
-  const [compassEnabled, setCompassEnabled] = useState(false);
 
-  async function enableCompass() {
-    try {
-      // iOS Safari: must be called from a user gesture
-      if (
-        typeof DeviceOrientationEvent !== "undefined" &&
-        typeof DeviceOrientationEvent.requestPermission === "function"
-      ) {
-        const res = await DeviceOrientationEvent.requestPermission();
-        if (res !== "granted") throw new Error("Motion permission not granted");
-      }
+  // add state
+const [compassEnabled, setCompassEnabled] = useState(false);
 
-      const handler = (e) => {
-        if (typeof e.webkitCompassHeading === "number") {
-          setHeading(e.webkitCompassHeading);
-        } else if (typeof e.alpha === "number") {
-          setHeading(360 - e.alpha);
-        }
-      };
-
-      window.addEventListener("deviceorientation", handler, true);
-      setCompassEnabled(true);
-
-      // optional: return cleanup if you want
-      // return () => window.removeEventListener("deviceorientation", handler, true);
-    } catch (err) {
-      console.warn("Compass enable failed:", err);
-      alert("Compass permission blocked. Try Safari settings → Motion & Orientation Access.");
-    }
+async function enableCompass() {
+  // must be inside a user gesture on iOS Safari
+  if (
+    typeof DeviceOrientationEvent !== "undefined" &&
+    typeof DeviceOrientationEvent.requestPermission === "function"
+  ) {
+    const res = await DeviceOrientationEvent.requestPermission();
+    if (res !== "granted") return;
   }
+
+  const handler = (e) => {
+    if (typeof e.webkitCompassHeading === "number") {
+      setHeading(e.webkitCompassHeading);
+    } else if (typeof e.alpha === "number") {
+      setHeading(360 - e.alpha);
+    }
+  };
+
+  window.addEventListener("deviceorientation", handler, true);
+  setCompassEnabled(true);
+}
 
 
   // Device heading listener (mobile only)
@@ -441,7 +433,9 @@ export default function CompassPage() {
               <div
                 className="compass"
                 style={{ "--needle-rot": `${needleRotation}deg` }}
-                aria-label="Compass"
+                role="button"
+                tabIndex={0}
+                onClick={() => !compassEnabled && enableCompass()}
               >
                 <div className="compassRing" />
                 <div className="compassN">N</div>
