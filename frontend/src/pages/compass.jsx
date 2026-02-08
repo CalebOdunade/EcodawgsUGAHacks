@@ -1,7 +1,14 @@
 // src/pages/CompassPage.jsx
 import "./compass.css";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvents } from "react-leaflet";
+import {
+  MapContainer,
+  TileLayer,
+  Marker,
+  Popup,
+  useMap,
+  useMapEvents,
+} from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 
@@ -31,22 +38,12 @@ function LocateMeButton({ onLocate }) {
 }
 
 /* -------------------- Icons -------------------- */
-const USER_ICON_URL =
-  "https://res.cloudinary.com/dvucimldu/image/upload/v1770500401/5216405_1_pdbpil.png";
-
 const BIN_ICON_URL =
   "https://res.cloudinary.com/dvucimldu/image/upload/v1770500666/green-compost-bin-icon-vector-59993202_zbumeb.png";
 
 // Use this icon (your logo) for the nearest bin highlight in list (instead of ⭐)
 const NEAREST_BADGE_URL =
   "https://res.cloudinary.com/dvucimldu/image/upload/v1770473617/image_he91pm.png";
-
-const userIcon = new L.Icon({
-  iconUrl: USER_ICON_URL,
-  iconSize: [36, 36],
-  iconAnchor: [18, 18],
-  popupAnchor: [0, -16],
-});
 
 /* -------------------- Math helpers -------------------- */
 function normalize360(deg) {
@@ -60,9 +57,9 @@ function haversineMeters(lat1, lon1, lat2, lon2) {
   const a =
     Math.sin(dLat / 2) * Math.sin(dLat / 2) +
     Math.cos((lat1 * Math.PI) / 180) *
-    Math.cos((lat2 * Math.PI) / 180) *
-    Math.sin(dLon / 2) *
-    Math.sin(dLon / 2);
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return R * c;
 }
@@ -76,7 +73,9 @@ function bearingDegrees(lat1, lon1, lat2, lon2) {
   const Δλ = toRad(lon2 - lon1);
 
   const y = Math.sin(Δλ) * Math.cos(φ2);
-  const x = Math.cos(φ1) * Math.sin(φ2) - Math.sin(φ1) * Math.cos(φ2) * Math.cos(Δλ);
+  const x =
+    Math.cos(φ1) * Math.sin(φ2) -
+    Math.sin(φ1) * Math.cos(φ2) * Math.cos(Δλ);
 
   return normalize360(toDeg(Math.atan2(y, x)));
 }
@@ -103,6 +102,9 @@ export default function CompassPage() {
   // selected bin (when user clicks a row in the list)
   const [selectedBinId, setSelectedBinId] = useState(null);
 
+  // if iOS requires a user gesture for motion/orientation, we’ll retry on first tap
+  const [needsCompassGesture, setNeedsCompassGesture] = useState(false);
+
   function clamp(n, min, max) {
     return Math.max(min, Math.min(max, n));
   }
@@ -127,13 +129,61 @@ export default function CompassPage() {
     });
   }
 
+  // Google-maps-like user marker: dot + direction cone
+  function makeUserHeadingIcon(headingDeg) {
+    const h = normalize360(Number(headingDeg) || 0);
+
+    // A little CSS-less “cone” + dot using inline styles (Leaflet divIcon)
+    // NOTE: Leaflet uses top-left positioning for the icon; we center via iconAnchor.
+    const html = `
+      <div style="
+        width: 44px; height: 44px;
+        position: relative;
+        transform: rotate(${h}deg);
+        transform-origin: 50% 50%;
+        pointer-events: none;
+      ">
+        <!-- direction cone -->
+        <div style="
+          position: absolute;
+          left: 50%; top: 6px;
+          width: 0; height: 0;
+          transform: translateX(-50%);
+          border-left: 10px solid transparent;
+          border-right: 10px solid transparent;
+          border-bottom: 22px solid rgba(0, 122, 255, 0.28);
+          filter: blur(0.2px);
+        "></div>
+
+        <!-- dot -->
+        <div style="
+          position: absolute;
+          left: 50%; top: 50%;
+          width: 14px; height: 14px;
+          transform: translate(-50%, -50%);
+          border-radius: 999px;
+          background: rgb(0, 122, 255);
+          box-shadow: 0 0 0 3px rgba(255,255,255,0.95);
+        "></div>
+      </div>
+    `;
+
+    return L.divIcon({
+      className: "", // prevent default leaflet styles
+      html,
+      iconSize: [44, 44],
+      iconAnchor: [22, 22],
+      popupAnchor: [0, -18],
+    });
+  }
+
   const binIconDyn = useMemo(() => makeBinIcon(zoom), [zoom]);
   const nearestBinIconDyn = useMemo(() => makeNearestBinIcon(zoom), [zoom]);
-  const API_BASE =
-    process.env.REACT_APP_API_BASE || "http://localhost:8080";
 
+  // user icon updates whenever heading changes
+  const userHeadingIcon = useMemo(() => makeUserHeadingIcon(heading), [heading]);
 
-
+  const API_BASE = process.env.REACT_APP_API_BASE || "http://localhost:8080";
 
   async function fetchAllBins() {
     const res = await fetch(`${API_BASE}/api/bins`);
@@ -141,27 +191,25 @@ export default function CompassPage() {
     return res.json();
   }
 
-
   async function fetchNearest(lat, lng) {
-    const res = await fetch(
-      `${API_BASE}/api/bins/nearest?lat=${lat}&lng=${lng}`
-    );
+    const res = await fetch(`${API_BASE}/api/bins/nearest?lat=${lat}&lng=${lng}`);
     if (!res.ok) throw new Error("Failed to fetch /api/bins/nearest");
     return res.json();
   }
 
-
   function getUserLocation() {
     return new Promise((resolve, reject) => {
-      navigator.geolocation.getCurrentPosition(
-        (p) => resolve(p),
-        reject,
-        { enableHighAccuracy: true, timeout: 10000 }
-      );
+      navigator.geolocation.getCurrentPosition((p) => resolve(p), reject, {
+        enableHighAccuracy: true,
+        timeout: 10000,
+      });
     });
   }
 
   async function requestCompassPermissionIfNeeded() {
+    // iOS Safari: requires a user gesture for requestPermission().
+    // We TRY automatically first (works on many Androids and some iOS setups),
+    // and if it fails we’ll retry on the user’s first tap anywhere.
     if (
       typeof DeviceOrientationEvent !== "undefined" &&
       typeof DeviceOrientationEvent.requestPermission === "function"
@@ -173,9 +221,8 @@ export default function CompassPage() {
 
   // Load all bins once
   useEffect(() => {
-    fetchAllBins()
-      .then(setBins)
-      .catch((e) => console.warn("bins error:", e));
+    fetchAllBins().then(setBins).catch((e) => console.warn("bins error:", e));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Location + nearest refresh (immediate + every 5s)
@@ -205,61 +252,64 @@ export default function CompassPage() {
       alive = false;
       clearInterval(t);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // add state
-const [compassEnabled, setCompassEnabled] = useState(false);
-
-async function enableCompass() {
-  // must be inside a user gesture on iOS Safari
-  if (
-    typeof DeviceOrientationEvent !== "undefined" &&
-    typeof DeviceOrientationEvent.requestPermission === "function"
-  ) {
-    const res = await DeviceOrientationEvent.requestPermission();
-    if (res !== "granted") return;
-  }
-
-  const handler = (e) => {
-    if (typeof e.webkitCompassHeading === "number") {
-      setHeading(e.webkitCompassHeading);
-    } else if (typeof e.alpha === "number") {
-      setHeading(360 - e.alpha);
-    }
-  };
-
-  window.addEventListener("deviceorientation", handler, true);
-  setCompassEnabled(true);
-}
-
-
-  // Device heading listener (mobile only)
+  // Device heading listener (auto-try, and if iOS blocks it, retry on first user gesture)
   useEffect(() => {
     let cleanup = null;
+    let attached = false;
 
-    (async () => {
+    const attachListener = async () => {
       try {
         await requestCompassPermissionIfNeeded();
 
         const handler = (e) => {
+          // iOS true compass heading
           if (typeof e.webkitCompassHeading === "number") {
             setHeading(e.webkitCompassHeading);
             return;
           }
+          // Android fallback
           if (typeof e.alpha === "number") {
             setHeading(360 - e.alpha);
           }
         };
 
         window.addEventListener("deviceorientation", handler, true);
+        attached = true;
+        setNeedsCompassGesture(false);
+
         cleanup = () => window.removeEventListener("deviceorientation", handler, true);
       } catch (e) {
-        console.warn("compass error:", e);
+        // iOS often throws here if not called from a user gesture
+        console.warn("compass permission blocked until gesture:", e);
+        setNeedsCompassGesture(true);
       }
-    })();
+    };
 
-    return () => cleanup?.();
-  }, []);
+    // First attempt immediately
+    attachListener();
+
+    // If blocked, retry once on the user's first interaction (no button needed)
+    const retryOnGesture = () => {
+      if (attached) return;
+      attachListener();
+    };
+
+    if (needsCompassGesture) {
+      window.addEventListener("click", retryOnGesture, { once: true, passive: true });
+      window.addEventListener("touchend", retryOnGesture, { once: true, passive: true });
+    }
+
+    return () => {
+      cleanup?.();
+      window.removeEventListener("click", retryOnGesture);
+      window.removeEventListener("touchend", retryOnGesture);
+    };
+    // IMPORTANT: we include needsCompassGesture so if the first attempt sets it true,
+    // we attach the one-time retry listeners.
+  }, [needsCompassGesture]);
 
   const nearestBin = nearest?.bin ?? null;
   const distanceMeters = nearest?.distanceMeters ?? 0;
@@ -314,18 +364,12 @@ async function enableCompass() {
     return d <= 3;
   }
 
-  function isSelected(b) {
-    return selectedBinId != null && b.id === selectedBinId;
-  }
-
-
   function getLeafletMap() {
-    // react-leaflet v4: mapRef.current is the MapContainer instance with .getMap()
-    // older patterns: sometimes it's already the Leaflet map
+    // react-leaflet v4/v5: mapRef.current is the MapContainer instance with .getMap()
     const maybe = mapRef.current;
     if (!maybe) return null;
-    if (typeof maybe.flyTo === "function") return maybe;         // already a Leaflet map
-    if (typeof maybe.getMap === "function") return maybe.getMap(); // MapContainer ref in v4
+    if (typeof maybe.flyTo === "function") return maybe; // already Leaflet map
+    if (typeof maybe.getMap === "function") return maybe.getMap(); // MapContainer ref
     return null;
   }
 
@@ -337,7 +381,6 @@ async function enableCompass() {
     }
     map.flyTo([b.lat, b.lng], Math.max(map.getZoom(), 17), { animate: true });
   }
-
 
   return (
     <div className="cpage">
@@ -364,10 +407,9 @@ async function enableCompass() {
                   className="leafletMap"
                   zoomControl={false}
                 >
-
                   <TileLayer
                     url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
-                    attribution='&copy; OpenStreetMap contributors &copy; CARTO'
+                    attribution="&copy; OpenStreetMap contributors &copy; CARTO"
                   />
 
                   <ZoomWatcher onZoom={setZoom} />
@@ -381,7 +423,8 @@ async function enableCompass() {
                     }}
                   />
 
-                  <Marker position={userPos} icon={userIcon}>
+                  {/* User marker with direction (no image) */}
+                  <Marker position={userPos} icon={userHeadingIcon}>
                     <Popup>You are here</Popup>
                   </Marker>
 
@@ -421,10 +464,15 @@ async function enableCompass() {
                 <div className="panelTitleSmall">
                   {selectedBinId && effectiveTargetBin
                     ? `${fmtDist(
-                      userPos
-                        ? haversineMeters(userPos[0], userPos[1], effectiveTargetBin.lat, effectiveTargetBin.lng)
-                        : distanceMeters
-                    )} away`
+                        userPos
+                          ? haversineMeters(
+                              userPos[0],
+                              userPos[1],
+                              effectiveTargetBin.lat,
+                              effectiveTargetBin.lng
+                            )
+                          : distanceMeters
+                      )} away`
                     : `${fmtDist(distanceMeters)} away`}
                 </div>
               </div>
@@ -433,9 +481,12 @@ async function enableCompass() {
               <div
                 className="compass"
                 style={{ "--needle-rot": `${needleRotation}deg` }}
-                role="button"
-                tabIndex={0}
-                onClick={() => !compassEnabled && enableCompass()}
+                aria-label="Compass"
+                title={
+                  needsCompassGesture
+                    ? "Tap the screen once to enable compass access"
+                    : "Compass"
+                }
               >
                 <div className="compassRing" />
                 <div className="compassN">N</div>
@@ -448,10 +499,18 @@ async function enableCompass() {
                 <div className="compassCenter" />
               </div>
             </div>
-            {!compassEnabled && (
-              <button className="locateBtn" type="button" onClick={enableCompass}>
-                Enable Compass
-              </button>
+
+            {/* Optional tiny hint (no button). Remove if you don’t want any text. */}
+            {needsCompassGesture && (
+              <div
+                style={{
+                  fontSize: 12,
+                  opacity: 0.85,
+                  margin: "6px 12px 0",
+                }}
+              >
+                Tap anywhere once to enable compass direction.
+              </div>
             )}
 
             {/* Scrollable list: click row -> fly to bin + select */}
@@ -471,7 +530,9 @@ async function enableCompass() {
                     }}
                   >
                     <div className="rowName">
-                      {nearestRow && <img className="nearestBadge" src={NEAREST_BADGE_URL} alt="" />}
+                      {nearestRow && (
+                        <img className="nearestBadge" src={NEAREST_BADGE_URL} alt="" />
+                      )}
                       {b.name}
                     </div>
                     <div className="rowDist">{fmtDist(b.distanceMeters)}</div>
