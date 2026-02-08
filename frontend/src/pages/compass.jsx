@@ -134,6 +134,8 @@ export default function CompassPage() {
 
   console.log("REACT_APP_API_BASE =", process.env.REACT_APP_API_BASE);
   console.log("API_BASE =", API_BASE);
+  console.log("API_BASE =", API_BASE);
+
 
   async function fetchAllBins() {
     const res = await fetch(`${API_BASE}/api/bins`);
