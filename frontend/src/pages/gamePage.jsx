@@ -537,7 +537,7 @@ export default function GamePage() {
 
                         {!gameOver && (
                             <div className="ghint">
-                                Drag to move • Catch compost ✅ • Avoid trash ❌
+                                Drag to move • Catch compost  • Avoid trash 
                                 {diff?.trashSameColor ? " • (Trash looks the same!)" : ""}
                             </div>
                         )}

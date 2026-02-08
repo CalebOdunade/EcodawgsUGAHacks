@@ -23,7 +23,6 @@
   z-index: 1;
   opacity: .11;
   pointer-events:none;
-  animation: none !important;   /* 👈 stop spinning */
   filter: drop-shadow(0 16px 16px rgba(0,0,0,.06));
 }
 
@@ -31,7 +30,7 @@
 
 /* make recycle feel like a background element (not a big sticker) */
 .recycleImg{
-  top: 58%;
+  top: 55.5%;
   width: 300px;
   opacity: .10;
   animation: spin 10s linear infinite;
@@ -133,7 +132,7 @@
 
 /* pin + label pop (no extra HTML needed) */
 .homePrimary::before{
-  content:"📍";
+  content:"";
   position:absolute;
   left: 16px;
   top: 50%;

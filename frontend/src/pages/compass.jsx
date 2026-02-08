@@ -485,7 +485,7 @@ export default function CompassPage() {
                 onClick={() => navigate("/game")}
               >
                 <img
-                  src="https://res.cloudinary.com/dvucimldu/image/upload/v1770553192/game-28_fbgo5v.png"
+                  src="https://res.cloudinary.com/dvucimldu/image/upload/v1770562218/images__1_-removebg-preview_jxjfya.png"
                   alt=""
                   className="gameIconImg"
                 />
