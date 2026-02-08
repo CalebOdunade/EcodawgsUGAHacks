@@ -129,18 +129,25 @@ export default function CompassPage() {
 
   const binIconDyn = useMemo(() => makeBinIcon(zoom), [zoom]);
   const nearestBinIconDyn = useMemo(() => makeNearestBinIcon(zoom), [zoom]);
+  const API_BASE =
+    process.env.REACT_APP_API_BASE || "http://localhost:8080";
 
   async function fetchAllBins() {
-    const res = await fetch("http://localhost:8080/api/bins");
+    const res = await fetch(`${API_BASE}/api/bins`);
     if (!res.ok) throw new Error("Failed to fetch /api/bins");
     return res.json();
   }
 
+
   async function fetchNearest(lat, lng) {
-    const res = await fetch(`http://localhost:8080/api/bins/nearest?lat=${lat}&lng=${lng}`);
+    const res = await fetch(
+      `${API_BASE}/api/bins/nearest?lat=${lat}&lng=${lng}`
+    );
     if (!res.ok) throw new Error("Failed to fetch /api/bins/nearest");
     return res.json();
   }
+
+  console.log("API_BASE:", API_BASE);
 
   function getUserLocation() {
     return new Promise((resolve, reject) => {
