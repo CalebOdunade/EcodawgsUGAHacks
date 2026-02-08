@@ -132,6 +132,9 @@ export default function CompassPage() {
   const API_BASE =
     process.env.REACT_APP_API_BASE || "http://localhost:8080";
 
+  console.log("REACT_APP_API_BASE =", process.env.REACT_APP_API_BASE);
+  console.log("API_BASE =", API_BASE);
+
   async function fetchAllBins() {
     const res = await fetch(`${API_BASE}/api/bins`);
     if (!res.ok) throw new Error("Failed to fetch /api/bins");
@@ -147,7 +150,6 @@ export default function CompassPage() {
     return res.json();
   }
 
-  console.log("API_BASE:", API_BASE);
 
   function getUserLocation() {
     return new Promise((resolve, reject) => {
