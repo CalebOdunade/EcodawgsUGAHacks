@@ -1,4 +1,5 @@
 import "./home.css";
+import Header from "../components/Header";
 import { useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -72,17 +73,20 @@ export default function Home() {
         <div className="scene homeScene">
           <DirtParticles count={22} />
 
+
           <img className="logoImg" src={LOGO_URL} alt="EcoDawgs" />
           <img className="recycleImg" src={RECYCLE_URL} alt="" aria-hidden="true" />
 
           {/* Simple action stack */}
           <div className="homeStack">
+            <Header />
+
             <button
               ref={locatorRef}
               className="homePrimary"
               onClick={(e) => {
                 ripple(locatorRef, e);
-                navigate("/compass"); // change route if needed
+                navigate("/compass");
               }}
               type="button"
             >
@@ -95,7 +99,7 @@ export default function Home() {
                 className="homeSecondary"
                 onClick={(e) => {
                   ripple(playRef, e);
-                  navigate("/game"); // change route if needed
+                  navigate("/game");
                 }}
                 type="button"
               >
@@ -104,13 +108,14 @@ export default function Home() {
 
               <button
                 className="homeSecondary"
-                onClick={() => navigate("/learn")} // change route if needed
+                onClick={() => navigate("/learn")}
                 type="button"
               >
                 Learn
               </button>
             </div>
           </div>
+
 
           <img className="dirtBottomImg" src={DIRT_URL} alt="" aria-hidden="true" />
           <img className="dirtBottomImg2" src={DIRT_URL} alt="" aria-hidden="true" />

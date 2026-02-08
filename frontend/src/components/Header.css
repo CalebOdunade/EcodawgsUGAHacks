@@ -1,0 +1,52 @@
+.coolHeader{
+  position: absolute;
+  top: -70px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 8px 18px;
+  background: linear-gradient(90deg,#2b8a3e 0%, #66cc66 100%);
+  color: #fff;
+  border-radius: 999px;
+  box-shadow: 0 8px 24px rgba(33,33,33,0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 40;
+  backdrop-filter: blur(6px);
+
+  white-space: nowrap;     /* 👈 keeps it one line */
+  width: fit-content;      /* 👈 snug pill */
+}
+
+.headerInner{display:flex;align-items:center;gap:10px}
+
+.coolHeader h1{
+  margin:0;
+  font-size:16px;
+  font-weight:800;
+  letter-spacing:1px;
+  text-transform:uppercase;
+  line-height:1;
+}
+
+.coolHeader .subtitle{
+  margin:0;
+  font-size:11px;
+  opacity:0.95;
+  font-weight:600;
+}
+
+@media (min-width:720px){
+  .coolHeader h1{font-size:18px}
+  .coolHeader .subtitle{font-size:12px}
+}
+.homeTagline{
+  text-align: center;
+  font-weight: 900;
+  font-size: 14px;
+  letter-spacing: 1.4px;
+  color: #0b2f18;
+  opacity: 0.9;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+}
