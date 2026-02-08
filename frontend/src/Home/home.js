@@ -2,7 +2,6 @@ import "./home.css";
 import { useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 
-
 const LOGO_URL =
   "https://res.cloudinary.com/dvucimldu/image/upload/v1770473617/image_he91pm.png";
 
@@ -12,9 +11,7 @@ const RECYCLE_URL =
 const DIRT_URL =
   "https://res.cloudinary.com/dvucimldu/image/upload/v1770480293/seamless-underground-with-different-layers-stock-illustration_1038821-151-removebg-preview_nzscjc.png";
 
-
-function DirtParticles({ count = 28 }) {
-    
+function DirtParticles({ count = 22 }) {
   const particles = useMemo(
     () =>
       Array.from({ length: count }).map(() => ({
@@ -28,7 +25,6 @@ function DirtParticles({ count = 28 }) {
   );
 
   return (
-    
     <div className="dirtSpawn" aria-hidden="true">
       {particles.map((p, i) => (
         <span
@@ -49,11 +45,12 @@ function DirtParticles({ count = 28 }) {
 }
 
 export default function Home() {
-const navigate = useNavigate();
+  const navigate = useNavigate();
 
-  const btnRef = useRef(null);
+  const locatorRef = useRef(null);
+  const playRef = useRef(null);
 
-  function ripple(e) {
+  function ripple(btnRef, e) {
     const btn = btnRef.current;
     if (!btn) return;
 
@@ -72,27 +69,51 @@ const navigate = useNavigate();
   return (
     <div className="page">
       <div className="phone">
-        <div className="scene">
-          {/* Dirt falling BEHIND everything */}
-          <DirtParticles count={30} />
+        <div className="scene homeScene">
+          <DirtParticles count={22} />
 
-          {/* Mascot / logo */}
           <img className="logoImg" src={LOGO_URL} alt="EcoDawgs" />
+          <img className="recycleImg" src={RECYCLE_URL} alt="" aria-hidden="true" />
 
-          {/* Recycling symbol (spinning + visible) */}
-          <img className="recycleImg" src={RECYCLE_URL} alt="Recycle" />
-
-          {/* Login centered */}
-          <button
-            className="loginBtn"
-            onClick={() => navigate("/auth")}
+          {/* Simple action stack */}
+          <div className="homeStack">
+            <button
+              ref={locatorRef}
+              className="homePrimary"
+              onClick={(e) => {
+                ripple(locatorRef, e);
+                navigate("/compass"); // change route if needed
+              }}
+              type="button"
             >
-            LOG IN
+              Compost Bin Locator
             </button>
 
-          {/* Small dirt strip at bottom */}
-            <img className="dirtBottomImg" src={DIRT_URL} alt="" aria-hidden="true" />
-            <img className="dirtBottomImg2" src={DIRT_URL} alt="" aria-hidden="true" />
+            <div className="homeRow">
+              <button
+                ref={playRef}
+                className="homeSecondary"
+                onClick={(e) => {
+                  ripple(playRef, e);
+                  navigate("/game"); // change route if needed
+                }}
+                type="button"
+              >
+                Play Now
+              </button>
+
+              <button
+                className="homeSecondary"
+                onClick={() => navigate("/learn")} // change route if needed
+                type="button"
+              >
+                Learn
+              </button>
+            </div>
+          </div>
+
+          <img className="dirtBottomImg" src={DIRT_URL} alt="" aria-hidden="true" />
+          <img className="dirtBottomImg2" src={DIRT_URL} alt="" aria-hidden="true" />
         </div>
       </div>
     </div>

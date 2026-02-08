@@ -1,114 +1,238 @@
 /* =========================
-   AUTH PAGE ONLY
+   AUTH PAGE ONLY (POLISHED)
    ========================= */
 
+:root{
+  --bg: #f6eedb;
+  --paper: rgba(255,255,255,.72);
+  --paper2: rgba(255,255,255,.58);
+  --ink: #1f2a1f;
+
+  --green: #2f8f4b;
+  --green2:#63c970;
+
+  --soil1:#6a4326;
+  --soil2:#2d1b11;
+
+  --shadow1: 0 18px 40px rgba(0,0,0,.14);
+  --shadow2: 0 10px 18px rgba(0,0,0,.12);
+  --ring: 0 0 0 3px rgba(99,201,112,.35);
+}
+
+/* keep your existing page/phone/scene from home.css if shared;
+   otherwise these are safe defaults */
+*{ box-sizing:border-box; }
+html,body,#root{ height:100%; margin:0; }
+body{
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  background: var(--bg);
+}
+.page{
+  min-height:100%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding: 24px;
+}
+.phone{
+  width: min(420px, 95vw);
+  height: min(760px, 92vh);
+  padding: 16px;
+  border-radius: 22px;
+  background: #f7edd6;
+  box-shadow: var(--shadow1);
+}
+.scene{
+  position:relative;
+  width:100%;
+  height:100%;
+  border-radius: 18px;
+  overflow:hidden;
+  background: radial-gradient(900px 600px at 20% 15%, #ffffff 0%, #fbf3df 35%, #f0d6a6 70%, #e8c889 100%);
+}
+
+.authScene::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:
+    radial-gradient(600px 400px at 80% 20%, rgba(99,201,112,.12), transparent 60%),
+    radial-gradient(700px 500px at 30% 70%, rgba(0,0,0,.05), transparent 60%);
+  z-index: 0;
+  pointer-events:none;
+}
+
+/* =========================
+   DIRT FALLING (BEHIND ALL)
+   ========================= */
+.dirtSpawn{
+  position:absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events:none;
+}
+.dirt{
+  position:absolute;
+  top:-18px;
+  border-radius:999px;
+  background: radial-gradient(circle at 30% 30%, #7a4b2a, #2d1b11);
+  animation-name: dirtFall;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+@keyframes dirtFall{
+  0%   { transform: translateX(0) translateY(-18px) scale(1); opacity: 0; }
+  10%  { opacity: 1; }
+  100% { transform: translateX(var(--drift)) translateY(900px) scale(.9); opacity: 0; }
+}
+
+/* =========================
+   RECYCLE (SUBTLE, NOT COMPETING)
+   ========================= */
 .recycleBg{
   position:absolute;
   left: 50%;
-  top: 46%;
-  width: 500px;
+  top: 44%;
+  width: 520px;
   transform: translate(-50%, -50%);
   z-index: 1;
-  opacity: .40;
+  opacity: .12;
   pointer-events:none;
-  animation: spin 5.2s linear infinite;
-  filter: drop-shadow(0 10px 10px rgba(0,0,0,.10));
+  animation: spin 10s linear infinite;
+  filter: drop-shadow(0 18px 18px rgba(0,0,0,.08));
 }
-
 @keyframes spin{
   to{ transform: translate(-50%, -50%) rotate(360deg); }
 }
 
-/* auth card */
+/* =========================
+   AUTH CARD (GLASSY)
+   ========================= */
 .authCard{
   position:absolute;
   left: 50%;
-  top: 46%;
+  top: 48%;
   transform: translate(-50%, -50%);
-  width: min(320px, 86%);
-  padding: 18px 16px 14px;
-  background: #b8a07b;
+  width: min(340px, 88%);
+  padding: 18px 18px 14px;
   z-index: 3;
-  box-shadow: 0 14px 22px rgba(0,0,0,.20);
-  border: 1px solid rgba(0,0,0,.15);
+
+  background: linear-gradient(180deg, var(--paper) 0%, var(--paper2) 100%);
+  border: 1px solid rgba(31,42,31,.12);
+  border-radius: 18px;
+  box-shadow: var(--shadow1);
+  backdrop-filter: blur(10px);
 }
 
 .authLogo{
   display:block;
   width: 150px;
-  margin: 0 auto 10px;
+  margin: 0 auto 8px;
   filter: drop-shadow(0 10px 10px rgba(0,0,0,.10));
   pointer-events:none;
 }
 
-/* input fields */
+.authTitle{
+  margin: 6px 0 2px;
+  text-align:center;
+  font-size: 18px;
+  font-weight: 800;
+  color: #1d2a1d;
+  letter-spacing: .2px;
+}
+.authSub{
+  margin: 0 0 14px;
+  text-align:center;
+  font-size: 12.5px;
+  color: rgba(31,42,31,.72);
+  line-height: 1.35;
+}
+
+/* inputs */
 .fields{
   display:flex;
   flex-direction:column;
   gap: 10px;
 }
 
-.field{
-  display:grid;
-  grid-template-columns: 38px 1fr;
-  align-items:center;
-  height: 36px;
-  background: linear-gradient(180deg, #4a3518 0%, #3c2a12 100%);
-}
-
-.fieldIcon{
-  height: 100%;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  background: #fff;
-  font-size: 16px;
-}
-
 .fieldInput{
-  height: 100%;
+  height: 42px;
   width: 100%;
-  border:none;
-  outline:none;
-  padding: 0 10px;
-  color:#fff;
-  background: transparent;
-  font-weight:700;
-  font-size:12px;
+  border-radius: 12px;
+  border: 1px solid rgba(31,42,31,.16);
+  background: rgba(255,255,255,.78);
+  padding: 0 12px;
+  color: #1f2a1f;
+  font-weight: 650;
+  font-size: 13px;
+  outline: none;
+  box-shadow: 0 6px 14px rgba(0,0,0,.06);
+  transition: box-shadow .12s ease, transform .12s ease, border-color .12s ease;
 }
 
 .fieldInput::placeholder{
-  color: rgba(255,255,255,.9);
+  color: rgba(31,42,31,.55);
+  font-weight: 600;
 }
 
-/* buttons */
+.fieldInput:focus{
+  border-color: rgba(99,201,112,.65);
+  box-shadow: var(--ring), 0 10px 18px rgba(0,0,0,.08);
+  transform: translateY(-1px);
+}
+
+/* primary button */
 .authBtn{
-  margin: 14px auto 6px;
+  margin: 14px auto 8px;
   display:block;
-  width: 110px;
-  height: 34px;
+  width: 100%;
+  height: 44px;
   border:none;
+  border-radius: 14px;
   cursor:pointer;
-  background: linear-gradient(180deg, #5a421e, #3c2a12);
-  color:#fff;
-  font-weight:800;
-  font-size:12px;
-  box-shadow: 0 10px 14px rgba(0,0,0,.18);
-  position:relative;
-  overflow:hidden;
+
+  background: radial-gradient(circle at 30% 25%, var(--green2), var(--green));
+  color:#0b2f18;
+  font-weight: 900;
+  font-size: 13px;
+  letter-spacing: .4px;
+  box-shadow: var(--shadow2);
+  transition: transform .12s ease, filter .12s ease;
 }
 
+.authBtn:hover{
+  filter: brightness(1.03);
+  transform: translateY(-1px);
+}
+.authBtn:active{
+  transform: translateY(0px) scale(.99);
+}
+
+/* secondary */
 .switchMode{
   margin: 6px auto 0;
   display:block;
   background:none;
   border:none;
   font-size:12px;
-  text-decoration:underline;
   cursor:pointer;
-  color: rgba(0,0,0,.7);
+  color: rgba(31,42,31,.75);
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
+/* bottom dirt */
+.dirtBottomImg{
+  position:absolute;
+  left: 0%;
+  right: 40%;
+  bottom: -45px;
+  height: 32%;
+  min-height: 90px;
+  z-index: 1;
+  filter: drop-shadow(0 -10px 14px rgba(0,0,0,.06));
+  opacity: 1;
+}
 .dirtBottomImg2{
   position:absolute;
   left: 50%;
@@ -116,11 +240,10 @@
   bottom: -42px;
   height: 32%;
   min-height: 90px;
-  max-height: none;
   z-index: 1;
   filter: drop-shadow(0 -10px 14px rgba(0,0,0,.06));
   opacity: 1;
 
   transform: scaleX(-1);
-  clip-path: inset(0 2% 0 6%); /* 👈 crop sides */
+  clip-path: inset(0 2% 0 6%);
 }

@@ -1,0 +1,384 @@
+/* src/pages/gamePage.css */
+:root{
+  --bg:#f6eedb;
+  --tan:#e8d9b9;
+  --tan2:#d9caa7;
+  --brown:#6a4326;
+  --brown2:#3a2416;
+  --shadow: 0 16px 30px rgba(0,0,0,.18);
+  --green:#2a9d57;
+  --red:#c0302f;
+}
+
+.gpage{
+  min-height: 100vh;
+  background: var(--bg);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding: 16px;
+}
+
+.gphone{
+  width:min(420px, 95vw);
+  height:min(760px, 92vh);
+  padding: 14px;
+  border-radius: 22px;
+  background:#f7edd6;
+  box-shadow: 0 18px 38px rgba(0,0,0,.14);
+}
+
+.gscene{
+  height:100%;
+  border-radius:18px;
+  overflow:hidden;
+  background: linear-gradient(180deg, #fbf3df 0%, #f0d6a6 62%, #e8c889 100%);
+  position:relative;
+}
+
+/* HEADER */
+.gheader{
+  position:absolute;
+  top: 10px;
+  left: 10px;
+  right: 10px;
+  z-index: 20;
+  display:grid;
+  grid-template-columns: auto 1fr auto;
+  align-items:center;
+  gap: 10px;
+  padding: 6px 0;
+}
+
+.gtitle{
+  justify-self:center;
+  font-weight: 1000;
+  color: var(--brown2);
+  letter-spacing: .3px;
+  display:flex;
+  align-items:center;
+  gap: 8px;
+  font-size: 18px;
+}
+
+.gstats{
+  justify-self:end;
+  display:flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 12px;
+  color: var(--brown2);
+  opacity: .9;
+  text-align:right;
+}
+
+.gbtn{
+  border:none;
+  border-radius: 10px;
+  padding: 10px 12px;
+  cursor:pointer;
+  background: rgba(233, 223, 190, .95);
+  box-shadow: 0 8px 16px rgba(0,0,0,.14);
+  color: var(--brown2);
+  font-weight: 900;
+}
+
+/* Difficulty bar: above arena and clickable */
+.gdifficulty{
+  position:absolute;
+  top: 62px;
+  left: 10px;
+  right: 10px;
+  z-index: 21;           /* ABOVE arena */
+  display:flex;
+  align-items:center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: rgba(255,255,255,.55);
+  box-shadow: 0 10px 18px rgba(0,0,0,.12);
+  pointer-events: auto;
+}
+
+.gdLabel{
+  font-weight: 900;
+  color: var(--brown2);
+  font-size: 12px;
+  opacity: .9;
+  margin-right: 4px;
+}
+
+.gdBtn{
+  border:none;
+  border-radius: 12px;
+  padding: 8px 10px;
+  cursor:pointer;
+  background: rgba(233, 223, 190, .95);
+  box-shadow: 0 8px 14px rgba(0,0,0,.10);
+  color: var(--brown2);
+  font-weight: 1000;
+  font-size: 12px;
+}
+
+.gdBtnOn{
+  outline: 2px solid rgba(42,157,87,0.45);
+  background: rgba(42,157,87,0.18);
+}
+
+/* ARENA: pushed down more so it doesn't collide */
+.garena{
+  position:absolute;
+  left: 10px;
+  right: 10px;
+  top: 120px;   /* important: below difficulty bar */
+  bottom: 10px;
+  border-radius: 16px;
+  background: rgba(230, 213, 176, .65);
+  box-shadow: var(--shadow);
+  overflow:hidden;
+  touch-action: none;
+  z-index: 5;
+}
+
+.gprogress{
+  position:absolute;
+  left: 12px;
+  top: 12px;
+  padding: 8px 10px;
+  border-radius: 12px;
+  background: rgba(255,255,255,.70);
+  font-size: 12px;
+  color: var(--brown2);
+  box-shadow: 0 8px 16px rgba(0,0,0,.10);
+  z-index: 7;
+}
+
+/* ITEMS */
+.gitem{
+  position:absolute;
+  top: 0;
+  left: 0;
+
+  /* auto-size so long labels fit */
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+
+  padding: 0 12px;
+  height: 34px;
+  border-radius: 999px;
+
+  max-width: calc(100% - 24px);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  user-select:none;
+  font-weight: 1000;
+  font-size: 13px;
+  color: var(--brown2);
+  box-shadow: 0 10px 22px rgba(0,0,0,0.18);
+
+  pointer-events: none; /* <-- KEY: don't steal clicks */
+  will-change: transform;
+}
+
+.gitemGood{
+  background: rgba(42,157,87,0.14);
+  border: 1px solid rgba(42,157,87,0.35);
+}
+
+.gitemBad{
+  background: rgba(192,48,47,0.12);
+  border: 1px solid rgba(192,48,47,0.35);
+}
+
+.gitemBadSame{
+  background: rgba(230, 213, 176, .85);
+  border: 1px solid rgba(0,0,0,.12);
+}
+
+/* BIN */
+.gbin{
+  position:absolute;
+  bottom: 14px;
+  width: 68px;
+  height: 68px;
+  border-radius: 16px;
+  background: rgba(42,157,87,0.10);
+  border: 2px solid rgba(42,157,87,0.28);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  box-shadow: 0 18px 40px rgba(0,0,0,0.20);
+  transition: opacity 70ms linear, filter 70ms linear;
+  z-index: 8;
+}
+
+.gbinImg{
+  width: 62px;
+  height: 62px;
+  object-fit: contain;
+  pointer-events: none;
+  user-select: none;
+}
+
+.gbinDamaged{
+  opacity: .25;
+  filter: grayscale(.8);
+}
+
+.ghint{
+  position:absolute;
+  left:0;
+  right:0;
+  bottom: 104px;
+  text-align:center;
+  font-size: 12px;
+  color: var(--brown2);
+  opacity: .8;
+  pointer-events:none;
+  z-index: 7;
+}
+
+/* GAME OVER */
+.gover{
+  position:absolute;
+  inset:0;
+  background: rgba(0,0,0,.35);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding: 16px;
+  z-index: 30;
+}
+
+.goverCard{
+  width: min(520px, 92vw);
+  max-height: calc(92vh - 40px);   /* 👈 keeps it inside the phone */
+  overflow-y: auto;               /* 👈 enables scrolling */
+  -webkit-overflow-scrolling: touch;
+
+  background: rgba(250,244,232,.97);
+  border-radius: 18px;
+  padding: 16px;
+  box-shadow: 0 30px 90px rgba(0,0,0,0.35);
+  border: 1px solid rgba(0,0,0,.08);
+  color: var(--brown2);
+}
+
+
+.goverTitle{
+  font-size: 20px;
+  font-weight: 1000;
+  margin-bottom: 8px;
+}
+
+.goverBody{
+  font-size: 13px;
+  opacity: .95;
+  line-height: 1.6;
+}
+
+.gwhy{
+  margin-top: 12px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: rgba(233, 223, 190, .65);
+  border: 1px solid rgba(0,0,0,.08);
+}
+
+.gwhyTitle{
+  font-weight: 1000;
+  margin-bottom: 6px;
+}
+
+.gwhyList{
+  margin: 0;
+  padding-left: 18px;
+  font-size: 12px;
+  line-height: 1.4;
+
+  max-height: 160px;              /* 👈 limit list height */
+  overflow-y: auto;               /* 👈 scroll just the list */
+  -webkit-overflow-scrolling: touch;
+}
+.goverBtns{
+  position: sticky;
+  bottom: 0;
+  background: rgba(250,244,232,.97);
+  padding-top: 12px;
+  margin-top: 14px;
+}
+
+
+
+.goverBtns{
+  display:flex;
+  gap: 10px;
+  margin-top: 14px;
+  flex-wrap: wrap;
+}
+
+.gbtnPrimary{
+  border:none;
+  border-radius: 12px;
+  padding: 12px 14px;
+  cursor:pointer;
+  background: rgba(42,157,87,0.18);
+  color: var(--brown2);
+  font-weight: 1000;
+  box-shadow: 0 10px 18px rgba(0,0,0,.14);
+}
+
+.gbtnLearn{
+  border:none;
+  border-radius: 12px;
+  padding: 12px 14px;
+  cursor:pointer;
+  background: rgba(106,67,38,0.16);
+  color: var(--brown2);
+  font-weight: 1000;
+  box-shadow: 0 10px 18px rgba(0,0,0,.14);
+}
+
+.goverFoot{
+  margin-top: 10px;
+  font-size: 12px;
+  opacity: .8;
+}
+/* In medium/hard, make ALL items look identical */
+.gitemSame{
+  background: rgba(233, 223, 190, .85);
+  border: 1px solid rgba(0,0,0,.12);
+}
+.gameIconImg{
+  width: 34px;
+  height: 34px;
+  object-fit: contain;
+  display:block;
+  margin: 0 auto;
+  pointer-events: none;
+}
+.gitemName{
+  background: transparent !important;
+  border: none !important;
+  color: inherit !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+/* In medium/hard, everything must look identical */
+.gitem.gitemSame{
+  background: rgba(233, 223, 190, .92) !important;
+  border: 1px solid rgba(0,0,0,.16) !important;
+  color: var(--brown2) !important;
+  box-shadow: 0 10px 22px rgba(0,0,0,0.18) !important;
+}
+
+/* If any other styles try to override, this wins */
+.gitem.gitemSame.gitemGood,
+.gitem.gitemSame.gitemBad{
+  background: rgba(233, 223, 190, .92) !important;
+  border: 1px solid rgba(0,0,0,.16) !important;
+}

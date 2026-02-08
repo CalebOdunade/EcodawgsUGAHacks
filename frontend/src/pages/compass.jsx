@@ -1,4 +1,3 @@
-// src/pages/CompassPage.jsx
 import "./compass.css";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -11,6 +10,7 @@ import {
 } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
+import { useNavigate } from "react-router-dom";
 
 /* -------------------- Map helpers -------------------- */
 function ZoomWatcher({ onZoom }) {
@@ -37,13 +37,20 @@ function LocateMeButton({ onLocate }) {
   );
 }
 
-/* -------------------- Icons -------------------- */
+/* -------------------- Assets -------------------- */
 const BIN_ICON_URL =
   "https://res.cloudinary.com/dvucimldu/image/upload/v1770500666/green-compost-bin-icon-vector-59993202_zbumeb.png";
 
-// Use this icon (your logo) for the nearest bin highlight in list (instead of ⭐)
 const NEAREST_BADGE_URL =
   "https://res.cloudinary.com/dvucimldu/image/upload/v1770473617/image_he91pm.png";
+
+// header top-left icon image (you asked)
+const TOP_LEFT_ICON_URL =
+  "https://res.cloudinary.com/dvucimldu/image/upload/v1770473617/image_he91pm.png";
+
+// footer brand image (you asked)
+const BRAND_LOGO_URL =
+  "https://res.cloudinary.com/dvucimldu/image/upload/v1770551394/Logo_d8b2at.png";
 
 /* -------------------- Math helpers -------------------- */
 function normalize360(deg) {
@@ -57,9 +64,9 @@ function haversineMeters(lat1, lon1, lat2, lon2) {
   const a =
     Math.sin(dLat / 2) * Math.sin(dLat / 2) +
     Math.cos((lat1 * Math.PI) / 180) *
-      Math.cos((lat2 * Math.PI) / 180) *
-      Math.sin(dLon / 2) *
-      Math.sin(dLon / 2);
+    Math.cos((lat2 * Math.PI) / 180) *
+    Math.sin(dLon / 2) *
+    Math.sin(dLon / 2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return R * c;
 }
@@ -82,28 +89,21 @@ function bearingDegrees(lat1, lon1, lat2, lon2) {
 
 /* -------------------- Page -------------------- */
 export default function CompassPage() {
+  const navigate = useNavigate();
   const mapRef = useRef(null);
 
-  // heading from device (mobile)
   const [heading, setHeading] = useState(0);
-
-  // user position for map
   const [userPos, setUserPos] = useState(null); // [lat,lng]
-
-  // bins list for markers
   const [bins, setBins] = useState([]);
-
-  // nearest response from backend
-  const [nearest, setNearest] = useState(null); // { bin, distanceMeters, bearingDegrees }
-
-  // map zoom
   const [zoom, setZoom] = useState(16);
-
-  // selected bin (when user clicks a row in the list)
   const [selectedBinId, setSelectedBinId] = useState(null);
 
-  // if iOS requires a user gesture for motion/orientation, we’ll retry on first tap
   const [needsCompassGesture, setNeedsCompassGesture] = useState(false);
+
+  // menu overlay state
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  const API_BASE = process.env.REACT_APP_API_BASE || "http://localhost:8080";
 
   function clamp(n, min, max) {
     return Math.max(min, Math.min(max, n));
@@ -132,18 +132,14 @@ export default function CompassPage() {
   // Google-maps-like user marker: dot + direction cone
   function makeUserHeadingIcon(headingDeg) {
     const h = normalize360(Number(headingDeg) || 0);
-
-    // A little CSS-less “cone” + dot using inline styles (Leaflet divIcon)
-    // NOTE: Leaflet uses top-left positioning for the icon; we center via iconAnchor.
     const html = `
       <div style="
-        width: 44px; height: 44px;
+        width: 46px; height: 46px;
         position: relative;
         transform: rotate(${h}deg);
         transform-origin: 50% 50%;
         pointer-events: none;
       ">
-        <!-- direction cone -->
         <div style="
           position: absolute;
           left: 50%; top: 6px;
@@ -151,49 +147,37 @@ export default function CompassPage() {
           transform: translateX(-50%);
           border-left: 10px solid transparent;
           border-right: 10px solid transparent;
-          border-bottom: 22px solid rgba(0, 122, 255, 0.28);
-          filter: blur(0.2px);
+          border-bottom: 24px solid rgba(42,157,87,0.30);
         "></div>
 
-        <!-- dot -->
         <div style="
           position: absolute;
           left: 50%; top: 50%;
           width: 14px; height: 14px;
           transform: translate(-50%, -50%);
           border-radius: 999px;
-          background: rgb(0, 122, 255);
+          background: rgb(42,157,87);
           box-shadow: 0 0 0 3px rgba(255,255,255,0.95);
         "></div>
       </div>
     `;
 
     return L.divIcon({
-      className: "", // prevent default leaflet styles
+      className: "",
       html,
-      iconSize: [44, 44],
-      iconAnchor: [22, 22],
+      iconSize: [46, 46],
+      iconAnchor: [23, 23],
       popupAnchor: [0, -18],
     });
   }
 
   const binIconDyn = useMemo(() => makeBinIcon(zoom), [zoom]);
   const nearestBinIconDyn = useMemo(() => makeNearestBinIcon(zoom), [zoom]);
-
-  // user icon updates whenever heading changes
   const userHeadingIcon = useMemo(() => makeUserHeadingIcon(heading), [heading]);
-
-  const API_BASE = process.env.REACT_APP_API_BASE || "http://localhost:8080";
 
   async function fetchAllBins() {
     const res = await fetch(`${API_BASE}/api/bins`);
     if (!res.ok) throw new Error("Failed to fetch /api/bins");
-    return res.json();
-  }
-
-  async function fetchNearest(lat, lng) {
-    const res = await fetch(`${API_BASE}/api/bins/nearest?lat=${lat}&lng=${lng}`);
-    if (!res.ok) throw new Error("Failed to fetch /api/bins/nearest");
     return res.json();
   }
 
@@ -207,9 +191,6 @@ export default function CompassPage() {
   }
 
   async function requestCompassPermissionIfNeeded() {
-    // iOS Safari: requires a user gesture for requestPermission().
-    // We TRY automatically first (works on many Androids and some iOS setups),
-    // and if it fails we’ll retry on the user’s first tap anywhere.
     if (
       typeof DeviceOrientationEvent !== "undefined" &&
       typeof DeviceOrientationEvent.requestPermission === "function"
@@ -225,7 +206,7 @@ export default function CompassPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Location + nearest refresh (immediate + every 5s)
+  // Location refresh (immediate + every 5s)
   useEffect(() => {
     let alive = true;
 
@@ -237,12 +218,8 @@ export default function CompassPage() {
 
         if (!alive) return;
         setUserPos([lat, lng]);
-
-        const data = await fetchNearest(lat, lng);
-        if (!alive) return;
-        setNearest(data);
       } catch (e) {
-        console.warn("nearest/geo error:", e);
+        console.warn("geo error:", e);
       }
     }
 
@@ -252,10 +229,9 @@ export default function CompassPage() {
       alive = false;
       clearInterval(t);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Device heading listener (auto-try, and if iOS blocks it, retry on first user gesture)
+  // Compass: auto-try; if iOS blocks it, retry on first tap
   useEffect(() => {
     let cleanup = null;
     let attached = false;
@@ -265,12 +241,10 @@ export default function CompassPage() {
         await requestCompassPermissionIfNeeded();
 
         const handler = (e) => {
-          // iOS true compass heading
           if (typeof e.webkitCompassHeading === "number") {
             setHeading(e.webkitCompassHeading);
             return;
           }
-          // Android fallback
           if (typeof e.alpha === "number") {
             setHeading(360 - e.alpha);
           }
@@ -279,27 +253,30 @@ export default function CompassPage() {
         window.addEventListener("deviceorientation", handler, true);
         attached = true;
         setNeedsCompassGesture(false);
-
-        cleanup = () => window.removeEventListener("deviceorientation", handler, true);
+        cleanup = () =>
+          window.removeEventListener("deviceorientation", handler, true);
       } catch (e) {
-        // iOS often throws here if not called from a user gesture
         console.warn("compass permission blocked until gesture:", e);
         setNeedsCompassGesture(true);
       }
     };
 
-    // First attempt immediately
     attachListener();
 
-    // If blocked, retry once on the user's first interaction (no button needed)
     const retryOnGesture = () => {
       if (attached) return;
       attachListener();
     };
 
     if (needsCompassGesture) {
-      window.addEventListener("click", retryOnGesture, { once: true, passive: true });
-      window.addEventListener("touchend", retryOnGesture, { once: true, passive: true });
+      window.addEventListener("click", retryOnGesture, {
+        once: true,
+        passive: true,
+      });
+      window.addEventListener("touchend", retryOnGesture, {
+        once: true,
+        passive: true,
+      });
     }
 
     return () => {
@@ -307,31 +284,25 @@ export default function CompassPage() {
       window.removeEventListener("click", retryOnGesture);
       window.removeEventListener("touchend", retryOnGesture);
     };
-    // IMPORTANT: we include needsCompassGesture so if the first attempt sets it true,
-    // we attach the one-time retry listeners.
   }, [needsCompassGesture]);
+  const menuBtnRef = useRef(null);
+  const [menuPos, setMenuPos] = useState({ top: 0, left: 0 });
 
-  const nearestBin = nearest?.bin ?? null;
-  const distanceMeters = nearest?.distanceMeters ?? 0;
+  function openMenu() {
+    const el = menuBtnRef.current;
+    if (!el) return;
 
-  // If user never clicked a bin, compass points to nearest.
-  // If user clicked a bin, compass points to that selected bin.
-  const effectiveTargetBin = useMemo(() => {
-    if (!selectedBinId) return nearestBin;
-    return bins.find((b) => b.id === selectedBinId) ?? nearestBin;
-  }, [selectedBinId, bins, nearestBin]);
+    const r = el.getBoundingClientRect();
+    const GAP = 8;
 
-  // Bearing to selected/nearest target (computed locally for reliability)
-  const effectiveBearing = useMemo(() => {
-    if (!userPos || !effectiveTargetBin) return 0;
-    const [ulat, ulng] = userPos;
-    return bearingDegrees(ulat, ulng, effectiveTargetBin.lat, effectiveTargetBin.lng);
-  }, [userPos, effectiveTargetBin]);
+    // Align the menu's RIGHT edge to the button's RIGHT edge
+    setMenuPos({
+      top: r.bottom + GAP,
+      left: r.right,
+    });
 
-  const needleRotation = useMemo(() => {
-    return normalize360(effectiveBearing - heading);
-  }, [effectiveBearing, heading]);
-
+    setMenuOpen(true);
+  }
   // Rank bins by distance (frontend)
   const rankedBins = useMemo(() => {
     if (!userPos || bins.length === 0) return [];
@@ -345,10 +316,34 @@ export default function CompassPage() {
       .sort((a, b) => a.distanceMeters - b.distanceMeters);
   }, [bins, userPos]);
 
+  // LOCAL nearest = first in ranked list
+  const nearestBin = rankedBins[0] ?? null;
+  const distanceMeters = nearestBin?.distanceMeters ?? 0;
+
   // Default selection to nearest (once it exists)
   useEffect(() => {
     if (!selectedBinId && nearestBin?.id != null) setSelectedBinId(nearestBin.id);
   }, [nearestBin, selectedBinId]);
+
+  const effectiveTargetBin = useMemo(() => {
+    if (!selectedBinId) return nearestBin;
+    return bins.find((b) => b.id === selectedBinId) ?? nearestBin;
+  }, [selectedBinId, bins, nearestBin]);
+
+  const effectiveBearing = useMemo(() => {
+    if (!userPos || !effectiveTargetBin) return 0;
+    const [ulat, ulng] = userPos;
+    return bearingDegrees(
+      ulat,
+      ulng,
+      effectiveTargetBin.lat,
+      effectiveTargetBin.lng
+    );
+  }, [userPos, effectiveTargetBin]);
+
+  const needleRotation = useMemo(() => {
+    return normalize360(effectiveBearing - heading);
+  }, [effectiveBearing, heading]);
 
   function fmtDist(m) {
     if (!Number.isFinite(m)) return "";
@@ -358,27 +353,20 @@ export default function CompassPage() {
 
   function isNearestBinMarker(b) {
     if (!nearestBin) return false;
-    if (nearestBin.id != null && b.id != null) return b.id === nearestBin.id;
-
-    const d = haversineMeters(b.lat, b.lng, nearestBin.lat, nearestBin.lng);
-    return d <= 3;
+    return b.id != null && nearestBin.id != null ? b.id === nearestBin.id : false;
   }
 
   function getLeafletMap() {
-    // react-leaflet v4/v5: mapRef.current is the MapContainer instance with .getMap()
     const maybe = mapRef.current;
     if (!maybe) return null;
-    if (typeof maybe.flyTo === "function") return maybe; // already Leaflet map
-    if (typeof maybe.getMap === "function") return maybe.getMap(); // MapContainer ref
+    if (typeof maybe.flyTo === "function") return maybe;
+    if (typeof maybe.getMap === "function") return maybe.getMap();
     return null;
   }
 
   function flyToBin(b) {
     const map = getLeafletMap();
-    if (!map) {
-      console.warn("Map not ready yet (mapRef.current is null)");
-      return;
-    }
+    if (!map) return;
     map.flyTo([b.lat, b.lng], Math.max(map.getZoom(), 17), { animate: true });
   }
 
@@ -388,13 +376,49 @@ export default function CompassPage() {
         <div className="cscene">
           {/* Header */}
           <div className="cheader">
-            <button className="iconBtn" aria-label="Recycle">
-              ♻
+            <button
+              className="iconBtn iconBtnImg"
+              aria-label="Home"
+              title="Home"
+              onClick={() => navigate("/")}
+              type="button"
+            >
+              <img src={TOP_LEFT_ICON_URL} alt="Home" />
             </button>
-            <button className="iconBtn" aria-label="Menu">
+
+            <button
+              ref={menuBtnRef}
+              className="iconBtn"
+              aria-label="Menu"
+              title="Menu"
+              onClick={openMenu}
+              type="button"
+            >
               ☰
             </button>
+
           </div>
+
+          {/* Menu overlay (ALWAYS above Leaflet) */}
+          {menuOpen && (
+            <div className="menuBackdrop" onClick={() => setMenuOpen(false)}>
+              <div
+                className="menuSheet"
+                style={{
+                  top: menuPos.top,
+                  left: menuPos.left,
+                  transform: "translateX(-100%)", // makes left be the RIGHT edge
+                }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="menuTitle">Menu</div>
+                <button className="menuItem" onClick={() => navigate("/")}>Home</button>
+                <button className="menuItem" onClick={() => navigate("/game")}>Game</button>
+                <button className="menuItem" onClick={() => navigate("/learn")}>Learn More</button>
+                <button className="menuClose" onClick={() => setMenuOpen(false)}>Close</button>
+              </div>
+            </div>
+          )}
 
           {/* Map */}
           <div className="mapWrap">
@@ -423,7 +447,6 @@ export default function CompassPage() {
                     }}
                   />
 
-                  {/* User marker with direction (no image) */}
                   <Marker position={userPos} icon={userHeadingIcon}>
                     <Popup>You are here</Popup>
                   </Marker>
@@ -453,28 +476,26 @@ export default function CompassPage() {
           {/* Bottom panel */}
           <div className="bottomPanel">
             <div className="panelTopRow">
-              <button className="bulbBtn" type="button" aria-label="Tip">
-                💡
+              {/* Game icon */}
+              <button
+                className="bulbBtn"
+                type="button"
+                aria-label="Game"
+                title="Play Compost Catch!"
+                onClick={() => navigate("/game")}
+              >
+                <img
+                  src="https://res.cloudinary.com/dvucimldu/image/upload/v1770553192/game-28_fbgo5v.png"
+                  alt=""
+                  className="gameIconImg"
+                />
               </button>
 
               <div className="panelTitle">
                 <div className="panelTitleBig">
-                  {effectiveTargetBin?.name ?? nearestBin?.name ?? "Nearest Bins"}
+                  {effectiveTargetBin?.name ?? "Nearest Bins"}
                 </div>
-                <div className="panelTitleSmall">
-                  {selectedBinId && effectiveTargetBin
-                    ? `${fmtDist(
-                        userPos
-                          ? haversineMeters(
-                              userPos[0],
-                              userPos[1],
-                              effectiveTargetBin.lat,
-                              effectiveTargetBin.lng
-                            )
-                          : distanceMeters
-                      )} away`
-                    : `${fmtDist(distanceMeters)} away`}
-                </div>
+                <div className="panelTitleSmall">{`${fmtDist(distanceMeters)} away`}</div>
               </div>
 
               {/* Compass */}
@@ -500,21 +521,13 @@ export default function CompassPage() {
               </div>
             </div>
 
-            {/* Optional tiny hint (no button). Remove if you don’t want any text. */}
             {needsCompassGesture && (
-              <div
-                style={{
-                  fontSize: 12,
-                  opacity: 0.85,
-                  margin: "6px 12px 0",
-                }}
-              >
+              <div className="compassHint">
                 Tap anywhere once to enable compass direction.
               </div>
             )}
 
-            {/* Scrollable list: click row -> fly to bin + select */}
-            <div className="list listScroll">
+            <div className="list listScroll listTight">
               {rankedBins.map((b, i) => {
                 const selected = selectedBinId != null && b.id === selectedBinId;
                 const nearestRow = i === 0;
@@ -544,8 +557,8 @@ export default function CompassPage() {
 
           {/* Footer */}
           <div className="footerBar">
-            <div className="help">Help</div>
-            <div className="brand">EcoDawgs</div>
+            <div className="footerSpacer" />
+            <img className="brandLogo" src={BRAND_LOGO_URL} alt="EcoDawgs" />
           </div>
         </div>
       </div>
