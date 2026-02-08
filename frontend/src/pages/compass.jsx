@@ -208,6 +208,38 @@ export default function CompassPage() {
       clearInterval(t);
     };
   }, []);
+  const [compassEnabled, setCompassEnabled] = useState(false);
+
+  async function enableCompass() {
+    try {
+      // iOS Safari: must be called from a user gesture
+      if (
+        typeof DeviceOrientationEvent !== "undefined" &&
+        typeof DeviceOrientationEvent.requestPermission === "function"
+      ) {
+        const res = await DeviceOrientationEvent.requestPermission();
+        if (res !== "granted") throw new Error("Motion permission not granted");
+      }
+
+      const handler = (e) => {
+        if (typeof e.webkitCompassHeading === "number") {
+          setHeading(e.webkitCompassHeading);
+        } else if (typeof e.alpha === "number") {
+          setHeading(360 - e.alpha);
+        }
+      };
+
+      window.addEventListener("deviceorientation", handler, true);
+      setCompassEnabled(true);
+
+      // optional: return cleanup if you want
+      // return () => window.removeEventListener("deviceorientation", handler, true);
+    } catch (err) {
+      console.warn("Compass enable failed:", err);
+      alert("Compass permission blocked. Try Safari settings → Motion & Orientation Access.");
+    }
+  }
+
 
   // Device heading listener (mobile only)
   useEffect(() => {
@@ -422,6 +454,11 @@ export default function CompassPage() {
                 <div className="compassCenter" />
               </div>
             </div>
+            {!compassEnabled && (
+              <button className="locateBtn" type="button" onClick={enableCompass}>
+                Enable Compass
+              </button>
+            )}
 
             {/* Scrollable list: click row -> fly to bin + select */}
             <div className="list listScroll">
